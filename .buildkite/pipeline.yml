@@ -1,9 +1,9 @@
 steps:
   - label: ":swift: Build & Run"
     commands:
-      - "printf '\033[34m+++ :swift: Building the Swift project\033[0m\n'" # Blue for build group header
+      - "printf '\\033[34m+++ :swift: Building the Swift project\\033[0m\n'" # Blue for build group header
       - "swift build"
-      - "echo '+++ :swift: Run'"
+      - "echo '+++ :swift: Running the Swift script'"
       - "swift run"
     agents:
       queue: hosted-macos-medium
