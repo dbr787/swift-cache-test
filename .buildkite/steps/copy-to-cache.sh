@@ -39,9 +39,15 @@ echo "Swift package dependencies resolved."
 
 # Log group for caching resolved dependencies
 echo -e '+++ \033[32m:swift: Caching resolved dependencies\033[0m'
+
+# Remove any existing cache to avoid recursive copying
+echo "Clearing existing cache at ${NSC_CACHE_PATH}/build..."
+rm -rf "${NSC_CACHE_PATH}/build"
+
+# Cache the current .build directory
 mkdir -p "${NSC_CACHE_PATH}/build"
 echo "Caching the local ./.build directory to ${NSC_CACHE_PATH}/build..."
-sudo cp -a ./.build "${NSC_CACHE_PATH}/build"
+sudo cp -a ./.build/. "${NSC_CACHE_PATH}/build"
 
 # Log the size of the cached .build directory
 echo "Listing directories in ${NSC_CACHE_PATH}:"
