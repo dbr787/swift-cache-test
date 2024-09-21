@@ -92,29 +92,34 @@ echo -e '+++ \033[36m:swift: Resolving Swift package dependencies\033[0m'
 swift package resolve
 echo "Swift package dependencies resolved"
 
-# List cache volume before updating it with new build
-echo "Listing directories in ${NSC_CACHE_PATH} before updating cache"
-if [ -d "${NSC_CACHE_PATH}" ]; then
-  sudo find "${NSC_CACHE_PATH}" -maxdepth 2 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
-else
-  echo "${NSC_CACHE_PATH} does not exist"
-fi
+# Only cache the resolved dependencies if USE_CACHE is true
+if [ "${USE_CACHE}" = "true" ]; then
+  # List cache volume before updating it with new build
+  echo "Listing directories in ${NSC_CACHE_PATH} before updating cache"
+  if [ -d "${NSC_CACHE_PATH}" ]; then
+    sudo find "${NSC_CACHE_PATH}" -maxdepth 2 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
+  else
+    echo "${NSC_CACHE_PATH} does not exist"
+  fi
 
-# Log group for caching resolved dependencies
-echo -e '+++ \033[32m:swift: Caching resolved dependencies\033[0m'
+  # Log group for caching resolved dependencies
+  echo -e '+++ \033[32m:swift: Caching resolved dependencies\033[0m'
 
-# Cache the current .build directory in the NSC_CACHE_PATH directly
-if [ -d ./.build ] && [ "$(ls -A ./.build)" ]; then
-  echo "Caching the local ./.build directory to ${NSC_CACHE_PATH}"
-  sudo cp -a ./.build/. "${NSC_CACHE_PATH}"  # Copy the contents of .build to NSC_CACHE_PATH
-else
-  echo "No local .build directory found to cache"
-fi
+  # Cache the current .build directory in the NSC_CACHE_PATH directly
+  if [ -d ./.build ] && [ "$(ls -A ./.build)" ]; then
+    echo "Caching the local ./.build directory to ${NSC_CACHE_PATH}"
+    sudo cp -a ./.build/. "${NSC_CACHE_PATH}"  # Copy the contents of .build to NSC_CACHE_PATH
+  else
+    echo "No local .build directory found to cache"
+  fi
 
-# List cache volume after updating it with new build
-echo "Listing directories in ${NSC_CACHE_PATH} after updating cache"
-if [ -d "${NSC_CACHE_PATH}" ]; then
-  sudo find "${NSC_CACHE_PATH}" -maxdepth 2 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
+  # List cache volume after updating it with new build
+  echo "Listing directories in ${NSC_CACHE_PATH} after updating cache"
+  if [ -d "${NSC_CACHE_PATH}" ]; then
+    sudo find "${NSC_CACHE_PATH}" -maxdepth 2 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
+  else
+    echo "${NSC_CACHE_PATH} does not exist"
+  fi
 else
-  echo "${NSC_CACHE_PATH} does not exist"
+  echo "USE_CACHE is set to false, skipping cache update"
 fi

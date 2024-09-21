@@ -8,7 +8,7 @@ steps:
     env:
       USE_CACHE: "true"
       CLEAR_CACHE: "false"
-      CACHE_KEY: "package-cache-${BUILDKITE_BRANCH}"
+      CACHE_KEY: "package-cache-${BUILDKITE_BRANCH}" # Placeholder only (for now)
 
   - label: ":swift: Resolve Dependencies (no cache)"
     key: "resolve-dependencies-no-cache"
@@ -19,7 +19,8 @@ steps:
     env:
       USE_CACHE: "false"
       CLEAR_CACHE: "false"
-      CACHE_KEY: "package-cache-${BUILDKITE_BRANCH}"
+      CACHE_KEY: "package-cache-${BUILDKITE_BRANCH}" # Placeholder only (for now)
+
 
   # # Resolve Dependencies with Cache
   # - label: ":swift: Resolve Dependencies (with cache)"
