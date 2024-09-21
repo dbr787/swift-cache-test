@@ -3,17 +3,17 @@ steps:
   - label: ":swift: Resolve Dependencies (with cache)"
     key: "resolve-dependencies-with-cache"
     commands:
-      - "echo \"NSC_CACHE_PATH is set to: \$NSC_CACHE_PATH\""  # Correct variable expansion with escaping
-      - "echo \"Listing contents of \$NSC_CACHE_PATH:\""
-      - "ls -l \"\$NSC_CACHE_PATH\""  # Correct variable expansion with escaping
+      - 'echo "NSC_CACHE_PATH is set to: $$NSC_CACHE_PATH"' # Correct variable expansion with $$ escaping
+      - 'echo "Listing contents of $$NSC_CACHE_PATH:"'
+      - 'ls -l "$$NSC_CACHE_PATH"' # Correct variable expansion with $$ escaping
       - "echo 'Cache size:'"
-      - "du -sh \"\$NSC_CACHE_PATH\""  # Correct variable expansion with escaping
+      - 'du -sh "$$NSC_CACHE_PATH"' # Correct variable expansion with $$ escaping
       - "echo -e '+++ \\033[35m:swift: Restoring cached dependencies\\033[0m'"
-      - "if [ -d \"\$NSC_CACHE_PATH/build\" ]; then cp -a \"\$NSC_CACHE_PATH/build\" ./.build 2>&1 | grep -v 'No such file or directory' || true; fi"
+      - 'if [ -d "$$NSC_CACHE_PATH/build" ]; then cp -a "$$NSC_CACHE_PATH/build" ./.build 2>&1 | grep -v ''No such file or directory'' || true; fi'
       - "echo -e '+++ \\033[36m:swift: Resolving Swift package dependencies\\033[0m'"
       - "swift package resolve"
       - "echo -e '+++ \\033[32m:swift: Caching resolved dependencies\\033[0m'"
-      - "mkdir -p \"\$NSC_CACHE_PATH/build\" && cp -a ./.build \"\$NSC_CACHE_PATH/build\" 2>&1 | grep -v 'No such file or directory' || true"
+      - 'mkdir -p "$$NSC_CACHE_PATH/build" && cp -a ./.build "$$NSC_CACHE_PATH/build" 2>&1 | grep -v ''No such file or directory'' || true'
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
@@ -22,17 +22,17 @@ steps:
   - label: ":swift: Build Project (with cache)"
     key: "build-project-with-cache"
     commands:
-      - "echo \"NSC_CACHE_PATH is set to: \$NSC_CACHE_PATH\""  # Correct variable expansion with escaping
-      - "echo \"Listing contents of \$NSC_CACHE_PATH:\""
-      - "ls -l \"\$NSC_CACHE_PATH\""  # Correct variable expansion with escaping
+      - 'echo "NSC_CACHE_PATH is set to: $$NSC_CACHE_PATH"' # Correct variable expansion with $$ escaping
+      - 'echo "Listing contents of $$NSC_CACHE_PATH:"'
+      - 'ls -l "$$NSC_CACHE_PATH"' # Correct variable expansion with $$ escaping
       - "echo 'Cache size:'"
-      - "du -sh \"\$NSC_CACHE_PATH\""  # Correct variable expansion with escaping
+      - 'du -sh "$$NSC_CACHE_PATH"' # Correct variable expansion with $$ escaping
       - "echo -e '+++ \\033[35m:swift: Restoring cached build artifacts\\033[0m'"
-      - "if [ -d \"\$NSC_CACHE_PATH/build\" ]; then cp -a \"\$NSC_CACHE_PATH/build\" ./.build 2>&1 | grep -v 'No such file or directory' || true; fi"
+      - 'if [ -d "$$NSC_CACHE_PATH/build" ]; then cp -a "$$NSC_CACHE_PATH/build" ./.build 2>&1 | grep -v ''No such file or directory'' || true; fi'
       - "echo -e '+++ \\033[36m:swift: Building the Swift project\\033[0m'"
       - "swift build"
       - "echo -e '+++ \\033[32m:swift: Caching build artifacts\\033[0m'"
-      - "mkdir -p \"\$NSC_CACHE_PATH/build\" && cp -a ./.build \"\$NSC_CACHE_PATH/build\" 2>&1 | grep -v 'No such file or directory' || true"
+      - 'mkdir -p "$$NSC_CACHE_PATH/build" && cp -a ./.build "$$NSC_CACHE_PATH/build" 2>&1 | grep -v ''No such file or directory'' || true'
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
