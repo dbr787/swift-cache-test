@@ -1,6 +1,7 @@
 env:
-  CACHE_KEY: "package-cache-{{ build.branch }}" # Set the cache key to the current branch name
-  CLEAR_CACHE: "false" # Set to "true" to clear cache manually when needed
+  USE_CACHE: "true"
+  CLEAR_CACHE: "false"
+  CACHE_KEY: "package-cache-{{ build.branch }}"
 
 steps:
   - label: ":swift: Resolve Dependencies (with cache)"
@@ -9,10 +10,6 @@ steps:
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
-    env:
-      CACHE_KEY: "package-cache-{{ build.branch }}" # Set the cache key to the current branch name
-      CLEAR_CACHE: "false" # Set to "true" to clear cache manually when needed
-
 
   # # Resolve Dependencies with Cache
   # - label: ":swift: Resolve Dependencies (with cache)"
