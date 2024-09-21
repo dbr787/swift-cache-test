@@ -89,7 +89,7 @@ fi
 
 # Log group for resolving dependencies
 echo -e '+++ \033[36m:swift: Resolving Swift package dependencies\033[0m'
-time swift package resolve
+swift package resolve
 echo "Swift package dependencies resolved"
 
 # List cache volume before updating it with new build
