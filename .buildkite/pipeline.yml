@@ -1,32 +1,45 @@
 steps:
+  # Resolve Dependencies with Cache
   - label: ":swift: Resolve Dependencies (with cache)"
     key: "resolve-dependencies-with-cache"
     commands:
+      - "echo 'NSC_CACHE_PATH is set to: $NSC_CACHE_PATH'" # Print cache path for debugging
+      - "echo 'Listing contents of $NSC_CACHE_PATH:'"
+      - "ls -l $NSC_CACHE_PATH" # List contents of cache path
+      - "echo 'Cache size:'"
+      - "du -sh $NSC_CACHE_PATH" # Show size of cache directory
       - "echo -e '+++ \\033[35m:swift: Restoring cached dependencies\\033[0m'"
-      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build 2>&1 | grep -v 'No such file or directory' || true; fi" # Use cache from /Volumes/cache
+      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build 2>&1 | grep -v 'No such file or directory' || true; fi"
       - "echo -e '+++ \\033[36m:swift: Resolving Swift package dependencies\\033[0m'"
       - "swift package resolve"
       - "echo -e '+++ \\033[32m:swift: Caching resolved dependencies\\033[0m'"
-      - "mkdir -p $NSC_CACHE_PATH/build && cp -a ./.build $NSC_CACHE_PATH/build 2>&1 | grep -v 'No such file or directory' || true" # Cache to /Volumes/cache
+      - "mkdir -p $NSC_CACHE_PATH/build && cp -a ./.build $NSC_CACHE_PATH/build 2>&1 | grep -v 'No such file or directory' || true"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
 
+  # Build Project with Cache
   - label: ":swift: Build Project (with cache)"
     key: "build-project-with-cache"
     commands:
+      - "echo 'NSC_CACHE_PATH is set to: $NSC_CACHE_PATH'" # Print cache path for debugging
+      - "echo 'Listing contents of $NSC_CACHE_PATH:'"
+      - "ls -l $NSC_CACHE_PATH" # List contents of cache path
+      - "echo 'Cache size:'"
+      - "du -sh $NSC_CACHE_PATH" # Show size of cache directory
       - "echo -e '+++ \\033[35m:swift: Restoring cached build artifacts\\033[0m'"
-      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build 2>&1 | grep -v 'No such file or directory' || true; fi" # Restore cache from /Volumes/cache
+      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build 2>&1 | grep -v 'No such file or directory' || true; fi"
       - "echo -e '+++ \\033[36m:swift: Building the Swift project\\033[0m'"
       - "swift build"
       - "echo -e '+++ \\033[32m:swift: Caching build artifacts\\033[0m'"
-      - "mkdir -p $NSC_CACHE_PATH/build && cp -a ./.build $NSC_CACHE_PATH/build 2>&1 | grep -v 'No such file or directory' || true" # Cache to /Volumes/cache
+      - "mkdir -p $NSC_CACHE_PATH/build && cp -a ./.build $NSC_CACHE_PATH/build 2>&1 | grep -v 'No such file or directory' || true"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
     depends_on:
       - "resolve-dependencies-with-cache"
 
+  # Resolve Dependencies without Cache
   - label: ":swift: Resolve Dependencies (no cache)"
     key: "resolve-dependencies-no-cache"
     commands:
@@ -35,6 +48,7 @@ steps:
     agents:
       queue: hosted-macos-medium
 
+  # Build Project without Cache
   - label: ":swift: Build Project (no cache)"
     key: "build-project-no-cache"
     commands:
