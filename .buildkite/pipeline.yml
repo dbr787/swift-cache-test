@@ -1,9 +1,32 @@
 steps:
-  - label: ":swift: Build & Run"
+  # - label: ":swift: Build & Run"
+  #   commands:
+  #     - "echo -e '+++ \\033[35m:swift: Building the Swift project\\033[0m'" # Magenta for build group header
+  #     - "swift build"
+  #     - "echo -e '+++ \\033[36m:swift: Running the Swift script\\033[0m'" # Cyan for run group header
+  #     - "swift run"
+  #   agents:
+  #     queue: hosted-macos-medium
+  - label: ":swift: Resolve Dependencies"
     commands:
-      - "echo -e '+++ \\033[35m:swift: Building the Swift project\\033[0m'" # Magenta for build group header
-      - "swift build"
-      - "echo -e '+++ \\033[36m:swift: Running the Swift script\\033[0m'" # Cyan for run group header
-      - "swift run"
+      - "echo -e '+++ \\033[34m:swift: Restoring cached dependencies\\033[0m'"
+      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -r $NSC_CACHE_PATH/build ./.build; fi"
+      - "echo -e '+++ \\033[34m:swift: Resolving Swift package dependencies\\033[0m'"
+      - "swift package resolve"
+      - "echo -e '+++ \\033[34m:swift: Caching resolved dependencies\\033[0m'"
+      - "cp -r ./.build $NSC_CACHE_PATH/build"
     agents:
       queue: hosted-macos-medium
+      nsc-cache-tag: "package-cache"
+
+  - label: ":swift: Build Project"
+    commands:
+      - "echo -e '+++ \\033[35m:swift: Restoring cached build artifacts\\033[0m'"
+      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -r $NSC_CACHE_PATH/build ./.build; fi"
+      - "echo -e '+++ \\033[35m:swift: Building the Swift project\\033[0m'"
+      - "swift build"
+      - "echo -e '+++ \\033[35m:swift: Caching build artifacts\\033[0m'"
+      - "cp -r ./.build $NSC_CACHE_PATH/build"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "package-cache"
