@@ -1,7 +1,7 @@
 steps:
   - label: ":swift: Resolve Dependencies (with cache)"
     key: "resolve-dependencies-with-cache"
-    command: '.buildkite/steps/resolve-dependencies.sh "${CLEAR_CACHE:-false}"'
+    command: ".buildkite/steps/resolve-dependencies.sh ${CLEAR_CACHE:-false}"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache" # Is this the cache key?
@@ -11,7 +11,7 @@ steps:
 
   - label: ":swift: Resolve Dependencies (no cache)"
     key: "resolve-dependencies-no-cache"
-    command: '.buildkite/steps/resolve-dependencies.sh "${CLEAR_CACHE:-false}"'
+    command: ".buildkite/steps/resolve-dependencies.sh ${CLEAR_CACHE:-false}"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache" # Is this the cache key?
