@@ -7,7 +7,7 @@ echo -e '+++ \033[33m:swift: Debug Information\033[0m'
 echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
 
 echo "Listing directories in ${NSC_CACHE_PATH}:"
-find "${NSC_CACHE_PATH}" -maxdepth 1 -type d -exec du -sh {} + 2>/dev/null || true
+find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
 
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
@@ -36,7 +36,7 @@ echo "Swift package dependencies resolved."
 echo -e '+++ \033[32m:swift: Caching resolved dependencies\033[0m'
 mkdir -p "${NSC_CACHE_PATH}/build"
 echo "Caching the local ./.build directory to ${NSC_CACHE_PATH}/build..."
-cp -a ./.build "${NSC_CACHE_PATH}/build"
+sudo cp -a ./.build "${NSC_CACHE_PATH}/build"
 
 # Log the size of the cached .build directory
 echo "Size of cached .build directory:"
