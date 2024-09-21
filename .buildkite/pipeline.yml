@@ -1,33 +1,40 @@
 steps:
-  # Resolve Dependencies with Cache
   - label: ":swift: Resolve Dependencies (with cache)"
     key: "resolve-dependencies-with-cache"
-    command: ".buildkite/steps/resolve-dependencies-with-cache.sh"
+    command: ".buildkite/steps/copy-to-cache.sh"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
 
-  # Build Project with Cache
-  - label: ":swift: Build Project (with cache)"
-    key: "build-project-with-cache"
-    command: ".buildkite/steps/build-project-with-cache.sh"
-    agents:
-      queue: hosted-macos-medium
-      nsc-cache-tag: "package-cache"
-    depends_on: "resolve-dependencies-with-cache"
+  # # Resolve Dependencies with Cache
+  # - label: ":swift: Resolve Dependencies (with cache)"
+  #   key: "resolve-dependencies-with-cache"
+  #   command: ".buildkite/steps/resolve-dependencies-with-cache.sh"
+  #   agents:
+  #     queue: hosted-macos-medium
+  #     nsc-cache-tag: "package-cache"
 
-  # Resolve Dependencies without Cache
-  - label: ":swift: Resolve Dependencies (no cache)"
-    key: "resolve-dependencies-no-cache"
-    command: ".buildkite/steps/resolve-dependencies-no-cache.sh"
-    agents:
-      queue: hosted-macos-medium
+  # # Build Project with Cache
+  # - label: ":swift: Build Project (with cache)"
+  #   key: "build-project-with-cache"
+  #   command: ".buildkite/steps/build-project-with-cache.sh"
+  #   agents:
+  #     queue: hosted-macos-medium
+  #     nsc-cache-tag: "package-cache"
+  #   depends_on: "resolve-dependencies-with-cache"
 
-  # Build Project without Cache
-  - label: ":swift: Build Project (no cache)"
-    key: "build-project-no-cache"
-    command: ".buildkite/steps/build-project-no-cache.sh"
-    agents:
-      queue: hosted-macos-medium
-    depends_on:
-      - "resolve-dependencies-no-cache"
+  # # Resolve Dependencies without Cache
+  # - label: ":swift: Resolve Dependencies (no cache)"
+  #   key: "resolve-dependencies-no-cache"
+  #   command: ".buildkite/steps/resolve-dependencies-no-cache.sh"
+  #   agents:
+  #     queue: hosted-macos-medium
+
+  # # Build Project without Cache
+  # - label: ":swift: Build Project (no cache)"
+  #   key: "build-project-no-cache"
+  #   command: ".buildkite/steps/build-project-no-cache.sh"
+  #   agents:
+  #     queue: hosted-macos-medium
+  #   depends_on:
+  #     - "resolve-dependencies-no-cache"
