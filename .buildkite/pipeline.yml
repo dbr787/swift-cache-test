@@ -1,0 +1,9 @@
+steps:
+  - label: ":swift: Build & Run"
+    commands:
+      - "echo -e '+++ \\033[35m:swift: Building the Swift project\\033[0m'" # Magenta for build group header
+      - "swift build"
+      - "echo -e '+++ \\033[36m:swift: Running the Swift script\\033[0m'" # Cyan for run group header
+      - "swift run"
+    agents:
+      queue: hosted-macos-medium

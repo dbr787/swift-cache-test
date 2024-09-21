@@ -1,29 +1,51 @@
-import Foundation
+import Alamofire
+import SwiftyJSON
+import Vapor
+import RealmSwift
 
 struct Joke: Decodable {
     let setup: String
     let punchline: String
 }
 
-print("Starting request to fetch a random joke...")
+print("Starting the Swift project with a joke...")
 
-let url = URL(string: "https://official-joke-api.appspot.com/jokes/random")!
-let semaphore = DispatchSemaphore(value: 0)
-
-let task = URLSession.shared.dataTask(with: url) { data, _, error in
-    if let error = error {
-        print("Error: \(error.localizedDescription)")
-    } else if let data = data {
-        if let joke = try? JSONDecoder().decode(Joke.self, from: data) {
-            print("\(joke.setup) - \(joke.punchline)")
-        } else {
-            print("Error decoding JSON")
-        }
+// Fetch a random joke using Alamofire
+AF.request("https://official-joke-api.appspot.com/jokes/random").responseDecodable(of: Joke.self) { response in
+    switch response.result {
+    case .success(let joke):
+        print("\(joke.setup) - \(joke.punchline)")
+    case .failure(let error):
+        print("Error fetching joke: \(error.localizedDescription)")
     }
-    semaphore.signal()
 }
 
-task.resume()
-semaphore.wait()
+// Set up a Realm instance
+class User: Object {
+    @objc dynamic var id: String = UUID().uuidString
+    @objc dynamic var name: String = ""
+    @objc dynamic var email: String = ""
+    override static func primaryKey() -> String? {
+        return "id"
+    }
+}
 
-print("Request completed")
+let realm = try! Realm()
+try! realm.write {
+    let user = User()
+    user.name = "John Doe"
+    user.email = "john@example.com"
+    realm.add(user)
+}
+
+print("Stored user in Realm: \(realm.objects(User.self).first?.name ?? "Unknown")")
+
+// Vapor HTTP server setup example
+let app = Application(.testing)
+defer { app.shutdown() }
+
+app.get("hello") { req -> String in
+    return "Hello, world!"
+}
+
+try! app.start()
