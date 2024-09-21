@@ -1,8 +1,7 @@
 steps:
   - label: ":swift: Build & Run"
     commands:
-      # - "echo '+++ :swift: Build'"
-      - "echo -e '+++ \033[35m:swift: Building the Swift project\033[0m'" # Blue for build group header
+      - "printf '+++ \033[34m:swift: Building the Swift project\033[0m\n'" # Blue for build group header
       - "swift build"
       - "echo '+++ :swift: Run'"
       - "swift run"
