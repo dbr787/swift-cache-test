@@ -1,21 +1,13 @@
 steps:
-  # - label: ":swift: Build & Run"
-  #   commands:
-  #     - "echo -e '+++ \\033[35m:swift: Building the Swift project\\033[0m'" # Magenta for build group header
-  #     - "swift build"
-  #     - "echo -e '+++ \\033[36m:swift: Running the Swift script\\033[0m'" # Cyan for run group header
-  #     - "swift run"
-  #   agents:
-  #     queue: hosted-macos-medium
   - label: ":swift: Resolve Dependencies"
     key: "resolve-dependencies"
     commands:
       - "echo -e '+++ \\033[35m:swift: Restoring cached dependencies\\033[0m'"
-      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build || true; fi" # Add `-a` and ignore errors
+      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build 2>&1 | grep -v 'No such file or directory' || true; fi" # Filter log output
       - "echo -e '+++ \\033[36m:swift: Resolving Swift package dependencies\\033[0m'"
       - "swift package resolve"
       - "echo -e '+++ \\033[32m:swift: Caching resolved dependencies\\033[0m'"
-      - "cp -a ./.build $NSC_CACHE_PATH/build || true" # Add `-a` and ignore errors
+      - "cp -a ./.build $NSC_CACHE_PATH/build 2>&1 | grep -v 'No such file or directory' || true" # Filter log output
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
@@ -24,11 +16,11 @@ steps:
     key: "build-project"
     commands:
       - "echo -e '+++ \\033[35m:swift: Restoring cached build artifacts\\033[0m'"
-      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build || true; fi" # Add `-a` and ignore errors
+      - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build 2>&1 | grep -v 'No such file or directory' || true; fi" # Filter log output
       - "echo -e '+++ \\033[36m:swift: Building the Swift project\\033[0m'"
       - "swift build"
       - "echo -e '+++ \\033[32m:swift: Caching build artifacts\\033[0m'"
-      - "cp -a ./.build $NSC_CACHE_PATH/build || true" # Add `-a` and ignore errors
+      - "cp -a ./.build $NSC_CACHE_PATH/build 2>&1 | grep -v 'No such file or directory' || true" # Filter log output
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
