@@ -11,7 +11,7 @@ steps:
       nsc-cache-tag: "package-cache"
     env:
       CACHE_KEY: "package-cache-{{ build.branch }}" # Set the cache key to the current branch name
-      CLEAR_CACHE: "true" # Set to "true" to clear cache manually when needed
+      CLEAR_CACHE: "false" # Set to "true" to clear cache manually when needed
 
 
   # # Resolve Dependencies with Cache
