@@ -6,8 +6,8 @@ set -euo pipefail
 echo -e '+++ \033[33m:swift: Debug Information\033[0m'
 echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
 
-echo "Listing contents of ${NSC_CACHE_PATH}:"
-ls -l "${NSC_CACHE_PATH}"
+echo "Listing directories in ${NSC_CACHE_PATH}:"
+find "${NSC_CACHE_PATH}" -maxdepth 1 -type d -exec du -sh {} + 2>/dev/null || true
 
 echo "Cache size (ignoring permission errors):"
 du -sh "${NSC_CACHE_PATH}" 2>/dev/null || true
