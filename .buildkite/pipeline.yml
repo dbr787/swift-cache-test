@@ -10,11 +10,11 @@ steps:
   - label: ":swift: Resolve Dependencies"
     key: "resolve-dependencies"
     commands:
-      - "echo -e '+++ \\033[34m:swift: Restoring cached dependencies\\033[0m'"
+      - "echo -e '+++ \\033[35m:swift: Restoring cached dependencies\\033[0m'"
       - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build || true; fi" # Add `-a` and ignore errors
-      - "echo -e '+++ \\033[34m:swift: Resolving Swift package dependencies\\033[0m'"
+      - "echo -e '+++ \\033[36m:swift: Resolving Swift package dependencies\\033[0m'"
       - "swift package resolve"
-      - "echo -e '+++ \\033[34m:swift: Caching resolved dependencies\\033[0m'"
+      - "echo -e '+++ \\033[32m:swift: Caching resolved dependencies\\033[0m'"
       - "cp -a ./.build $NSC_CACHE_PATH/build || true" # Add `-a` and ignore errors
     agents:
       queue: hosted-macos-medium
@@ -25,9 +25,9 @@ steps:
     commands:
       - "echo -e '+++ \\033[35m:swift: Restoring cached build artifacts\\033[0m'"
       - "if [ -d $NSC_CACHE_PATH/build ]; then cp -a $NSC_CACHE_PATH/build ./.build || true; fi" # Add `-a` and ignore errors
-      - "echo -e '+++ \\033[35m:swift: Building the Swift project\\033[0m'"
+      - "echo -e '+++ \\033[36m:swift: Building the Swift project\\033[0m'"
       - "swift build"
-      - "echo -e '+++ \\033[35m:swift: Caching build artifacts\\033[0m'"
+      - "echo -e '+++ \\033[32m:swift: Caching build artifacts\\033[0m'"
       - "cp -a ./.build $NSC_CACHE_PATH/build || true" # Add `-a` and ignore errors
     agents:
       queue: hosted-macos-medium
