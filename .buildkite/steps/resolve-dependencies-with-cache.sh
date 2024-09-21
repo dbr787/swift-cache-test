@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Log group for debugging steps
-echo -e '+++ \033[34m:swift: Debug Information\033[0m'
+echo -e '+++ \033[33m:swift: Debug Information\033[0m'
 echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
 
 echo "Listing contents of ${NSC_CACHE_PATH}:"
@@ -11,6 +11,18 @@ ls -l "${NSC_CACHE_PATH}"
 
 echo "Cache size (ignoring permission errors):"
 du -sh "${NSC_CACHE_PATH}" 2>/dev/null || true
+
+echo "Detailed cache size (1 level deep):"
+# Show size of each subdirectory one level deep
+du -sh "${NSC_CACHE_PATH}"/* 2>/dev/null || true
+
+# Optionally show a tree view (if `tree` command is available)
+if command -v tree &> /dev/null; then
+  echo "Tree view of cache directory (1 level deep):"
+  tree -L 1 "${NSC_CACHE_PATH}" 2>/dev/null || true
+else
+  echo "tree command is not available; skipping tree view."
+fi
 
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
