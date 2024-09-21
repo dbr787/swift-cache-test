@@ -5,6 +5,9 @@ steps:
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
+    env:
+      CLEAR_CACHE: "false" # Set to "true" to clear cache manually when needed
+
 
   # # Resolve Dependencies with Cache
   # - label: ":swift: Resolve Dependencies (with cache)"
