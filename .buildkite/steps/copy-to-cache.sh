@@ -2,8 +2,12 @@
 
 set -euo pipefail
 
+# Default CLEAR_CACHE to false if not set
+CLEAR_CACHE="${CLEAR_CACHE:-false}"
+
 # Log group for debugging steps
 echo -e '+++ \033[33m:swift: Debug Information\033[0m'
+
 echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
 echo "CLEAR_CACHE is set to: ${CLEAR_CACHE}"
 
@@ -18,7 +22,7 @@ fi
 
 # List directories in cache
 echo "Listing directories in ${NSC_CACHE_PATH}:"
-find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+find "${NSC_CACHE_PATH}" -maxdepth 4 -type d -exec du -sh {} + 2>/dev/null || true
 
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
@@ -28,7 +32,7 @@ if [ "$(ls -A ${NSC_CACHE_PATH})" ]; then
   # Copy the contents of the cache to ./.build, not the directory itself
   echo "Copying cached build contents to local ./.build..."
   mkdir -p ./.build
-  cp -a "${NSC_CACHE_PATH}/." ./.build  # Copy contents, not the cache directory itself
+  sudo cp -a "${NSC_CACHE_PATH}/." ./.build  # Copy contents, not the cache directory itself
 
   # Check if .build was restored successfully
   if [ -d ./.build ] && [ "$(ls -A ./.build)" ]; then
