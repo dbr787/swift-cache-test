@@ -2,13 +2,15 @@
 
 set -euo pipefail
 
-# Default CLEAR_CACHE to false if not set
-CLEAR_CACHE="${CLEAR_CACHE:-false}"
+# Default values for environment variables
+USE_CACHE="${USE_CACHE:-true}"  # Controls whether to use cache
+CLEAR_CACHE="${CLEAR_CACHE:-false}"  # Controls whether to clear cache
 
 # Log group for debugging steps
 echo -e '+++ \033[33m:swift: Debug Information\033[0m'
 
 echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
+echo "USE_CACHE is set to: ${USE_CACHE}"
 echo "CLEAR_CACHE is set to: ${CLEAR_CACHE}"
 
 # List cache volume before any operation, excluding system directories
@@ -44,41 +46,45 @@ else
 fi
 
 # Log group for restoring cached dependencies
-echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
+if [ "${USE_CACHE}" = "true" ]; then
+  echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
 
-# Check for non-hidden files in cache before copying, excluding system directories
-if [ -d "${NSC_CACHE_PATH}" ] && [ "$(sudo find "${NSC_CACHE_PATH}" -type f -not -name '.*' -not -path '*/.Spotlight-V100/*' -not -path '*/.Trashes/*' -not -path '*/.fseventsd/*')" ]; then
-  echo "Found non-empty cached build directory at ${NSC_CACHE_PATH}"
-  
-  # List local build directory before copying from cache
-  echo "Listing local ./.build directory before copying from cache"
-  if [ -d ./.build ]; then
-    find ./.build -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+  # Check for non-hidden files in cache before copying, excluding system directories
+  if [ -d "${NSC_CACHE_PATH}" ] && [ "$(sudo find "${NSC_CACHE_PATH}" -type f -not -name '.*' -not -path '*/.Spotlight-V100/*' -not -path '*/.Trashes/*' -not -path '*/.fseventsd/*')" ]; then
+    echo "Found non-empty cached build directory at ${NSC_CACHE_PATH}"
+    
+    # List local build directory before copying from cache
+    echo "Listing local ./.build directory before copying from cache"
+    if [ -d ./.build ]; then
+      find ./.build -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+    else
+      echo "No local .build directory exists"
+    fi
+
+    # Copy the contents of the cache to ./.build, not the directory itself
+    echo "Copying cached build contents to local ./.build"
+    mkdir -p ./.build
+    sudo cp -a "${NSC_CACHE_PATH}/." ./.build
+
+    # List local build directory after copying from cache
+    echo "Listing local ./.build directory after copying from cache"
+    if [ -d ./.build ]; then
+      find ./.build -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+    else
+      echo "No local .build directory exists"
+    fi
+
+    # Check if .build was restored successfully
+    if [ -d ./.build ] && [ "$(ls -A ./.build)" ]; then
+      echo "Successfully restored .build directory from cache"
+    else
+      echo "Warning: Restored .build directory is empty"
+    fi
   else
-    echo "No local .build directory exists"
-  fi
-
-  # Copy the contents of the cache to ./.build, not the directory itself
-  echo "Copying cached build contents to local ./.build"
-  mkdir -p ./.build
-  sudo cp -a "${NSC_CACHE_PATH}/." ./.build
-
-  # List local build directory after copying from cache
-  echo "Listing local ./.build directory after copying from cache"
-  if [ -d ./.build ]; then
-    find ./.build -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
-  else
-    echo "No local .build directory exists"
-  fi
-
-  # Check if .build was restored successfully
-  if [ -d ./.build ] && [ "$(ls -A ./.build)" ]; then
-    echo "Successfully restored .build directory from cache"
-  else
-    echo "Warning: Restored .build directory is empty"
+    echo "No non-empty cached build directory found in ${NSC_CACHE_PATH}"
   fi
 else
-  echo "No non-empty cached build directory found in ${NSC_CACHE_PATH}"
+  echo "USE_CACHE is set to false, skipping cache restoration"
 fi
 
 # Log group for resolving dependencies
@@ -86,7 +92,7 @@ echo -e '+++ \033[36m:swift: Resolving Swift package dependencies\033[0m'
 time swift package resolve
 echo "Swift package dependencies resolved"
 
-# List cache volume before updating it with new build using sudo
+# List cache volume before updating it with new build
 echo "Listing directories in ${NSC_CACHE_PATH} before updating cache"
 if [ -d "${NSC_CACHE_PATH}" ]; then
   sudo find "${NSC_CACHE_PATH}" -maxdepth 3 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
@@ -105,7 +111,7 @@ else
   echo "No local .build directory found to cache"
 fi
 
-# List cache volume after updating it with new build using sudo
+# List cache volume after updating it with new build
 echo "Listing directories in ${NSC_CACHE_PATH} after updating cache"
 if [ -d "${NSC_CACHE_PATH}" ]; then
   sudo find "${NSC_CACHE_PATH}" -maxdepth 3 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
