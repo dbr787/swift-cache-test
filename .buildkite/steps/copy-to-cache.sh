@@ -45,8 +45,9 @@ fi
 
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
-# Only proceed if cache directory exists and is NOT empty
-if [ -d "${NSC_CACHE_PATH}" ] && [ "$(ls -A ${NSC_CACHE_PATH})" ]; then
+
+# Check for non-hidden files in cache before copying
+if [ -d "${NSC_CACHE_PATH}" ] && [ "$(find "${NSC_CACHE_PATH}" -type f -not -name '.*')" ]; then
   echo "Found non-empty cached build directory at ${NSC_CACHE_PATH}"
   
   # List local build directory before copying from cache
@@ -60,7 +61,7 @@ if [ -d "${NSC_CACHE_PATH}" ] && [ "$(ls -A ${NSC_CACHE_PATH})" ]; then
   # Copy the contents of the cache to ./.build, not the directory itself
   echo "Copying cached build contents to local ./.build"
   mkdir -p ./.build
-  sudo cp -a "${NSC_CACHE_PATH}/." ./.build  # Copy contents, not the cache directory itself
+  sudo cp -av "${NSC_CACHE_PATH}/." ./.build  # Use `-v` for verbose output to log copied files
 
   # List local build directory after copying from cache
   echo "Listing local ./.build directory after copying from cache"
