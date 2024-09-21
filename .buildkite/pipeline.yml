@@ -1,9 +1,9 @@
 steps:
   - label: ":swift: Build & Run"
     commands:
-      - "echo '+++ :swift: Building the Swift project'"
+      - "echo -e '+++ \033[34m:swift: Building the Swift project\033[0m'"
       - "swift build"
-      - "echo '+++ :swift: Running the Swift script'"
+      - "echo -e '+++ \033[35m:swift: Running the Swift script\033[0m'"
       - "swift run"
     agents:
       queue: hosted-macos-medium
