@@ -14,7 +14,7 @@ echo "CLEAR_CACHE is set to: ${CLEAR_CACHE}"
 # Conditionally clear cache based on CLEAR_CACHE variable
 if [ "${CLEAR_CACHE}" = "true" ]; then
   echo -e '+++ \033[31m:swift: Clearing existing cache as CLEAR_CACHE is set to true\033[0m'
-  sudo rm -rf "${NSC_CACHE_PATH}/*"  # Clear everything in NSC_CACHE_PATH, not a specific subdirectory
+  rm -rf "${NSC_CACHE_PATH}/."  # Remove everything, including hidden files
   echo "Cleared cache in ${NSC_CACHE_PATH}."
 else
   echo "CLEAR_CACHE is set to false, skipping cache clearing."
@@ -22,7 +22,7 @@ fi
 
 # List directories in cache
 echo "Listing directories in ${NSC_CACHE_PATH}:"
-find "${NSC_CACHE_PATH}" -maxdepth 4 -type d -exec du -sh {} + 2>/dev/null || true
+find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
 
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
