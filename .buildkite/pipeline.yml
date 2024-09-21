@@ -3,7 +3,7 @@ env:
   CLEAR_CACHE: "false" # Set to "true" to clear cache manually when needed
 
 steps:
-  - label: ":swift: Copy to cache"
+  - label: ":swift: Resolve Dependencies (with cache)"
     key: "resolve-dependencies-with-cache"
     command: ".buildkite/steps/copy-to-cache.sh"
     agents:

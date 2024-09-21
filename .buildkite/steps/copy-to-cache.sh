@@ -61,7 +61,7 @@ if [ -d "${NSC_CACHE_PATH}" ] && [ "$(sudo find "${NSC_CACHE_PATH}" -type f -not
   # Copy the contents of the cache to ./.build, not the directory itself
   echo "Copying cached build contents to local ./.build"
   mkdir -p ./.build
-  sudo cp -av "${NSC_CACHE_PATH}/." ./.build  # Use `-v` for verbose output to log copied files
+  sudo cp -a "${NSC_CACHE_PATH}/." ./.build
 
   # List local build directory after copying from cache
   echo "Listing local ./.build directory after copying from cache"
@@ -89,7 +89,7 @@ echo "Swift package dependencies resolved"
 # List cache volume before updating it with new build using sudo
 echo "Listing directories in ${NSC_CACHE_PATH} before updating cache"
 if [ -d "${NSC_CACHE_PATH}" ]; then
-  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
 else
   echo "${NSC_CACHE_PATH} does not exist"
 fi
@@ -108,7 +108,7 @@ fi
 # List cache volume after updating it with new build using sudo
 echo "Listing directories in ${NSC_CACHE_PATH} after updating cache"
 if [ -d "${NSC_CACHE_PATH}" ]; then
-  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
 else
   echo "${NSC_CACHE_PATH} does not exist"
 fi
