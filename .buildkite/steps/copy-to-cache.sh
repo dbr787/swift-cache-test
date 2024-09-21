@@ -11,10 +11,10 @@ echo -e '+++ \033[33m:swift: Debug Information\033[0m'
 echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
 echo "CLEAR_CACHE is set to: ${CLEAR_CACHE}"
 
-# List cache volume before any operation
+# List cache volume before any operation, excluding system directories
 echo "Listing directories in ${NSC_CACHE_PATH} before any operation"
 if [ -d "${NSC_CACHE_PATH}" ]; then
-  find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
 else
   echo "${NSC_CACHE_PATH} does not exist"
 fi
@@ -25,9 +25,9 @@ if [ "${CLEAR_CACHE}" = "true" ]; then
   
   # Check if NSC_CACHE_PATH exists before trying to clear
   if [ -d "${NSC_CACHE_PATH}" ]; then
-    # Remove all contents (including hidden files) except for `.` and `..`
-    rm -rf "${NSC_CACHE_PATH}/"[!.]* "${NSC_CACHE_PATH}/."* 2>/dev/null || true
-    echo "Cleared cache in ${NSC_CACHE_PATH}"
+    # Remove all contents except system directories (ignore hidden system directories)
+    sudo find "${NSC_CACHE_PATH}" \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -exec rm -rf {} + 2>/dev/null || true
+    echo "Cleared cache in ${NSC_CACHE_PATH} (excluding system directories)"
   else
     echo "Cache path ${NSC_CACHE_PATH} does not exist, nothing to clear"
   fi
@@ -35,7 +35,7 @@ if [ "${CLEAR_CACHE}" = "true" ]; then
   # List cache volume after clearing it
   echo "Listing directories in ${NSC_CACHE_PATH} after clearing"
   if [ -d "${NSC_CACHE_PATH}" ]; then
-    find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+    sudo find "${NSC_CACHE_PATH}" -maxdepth 3 \( -name ".Spotlight-V100" -o -name ".Trashes" -o -name ".fseventsd" \) -prune -o -type d -exec du -sh {} + 2>/dev/null || true
   else
     echo "${NSC_CACHE_PATH} does not exist"
   fi
@@ -46,8 +46,8 @@ fi
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
 
-# Check for non-hidden files in cache before copying
-if [ -d "${NSC_CACHE_PATH}" ] && [ "$(find "${NSC_CACHE_PATH}" -type f -not -name '.*')" ]; then
+# Check for non-hidden files in cache before copying, excluding system directories
+if [ -d "${NSC_CACHE_PATH}" ] && [ "$(sudo find "${NSC_CACHE_PATH}" -type f -not -name '.*' -not -path '*/.Spotlight-V100/*' -not -path '*/.Trashes/*' -not -path '*/.fseventsd/*')" ]; then
   echo "Found non-empty cached build directory at ${NSC_CACHE_PATH}"
   
   # List local build directory before copying from cache
@@ -86,10 +86,10 @@ echo -e '+++ \033[36m:swift: Resolving Swift package dependencies\033[0m'
 time swift package resolve
 echo "Swift package dependencies resolved"
 
-# List cache volume before updating it with new build
+# List cache volume before updating it with new build using sudo
 echo "Listing directories in ${NSC_CACHE_PATH} before updating cache"
 if [ -d "${NSC_CACHE_PATH}" ]; then
-  find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
 else
   echo "${NSC_CACHE_PATH} does not exist"
 fi
@@ -105,10 +105,10 @@ else
   echo "No local .build directory found to cache"
 fi
 
-# List cache volume after updating it with new build
+# List cache volume after updating it with new build using sudo
 echo "Listing directories in ${NSC_CACHE_PATH} after updating cache"
 if [ -d "${NSC_CACHE_PATH}" ]; then
-  find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+  sudo find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
 else
   echo "${NSC_CACHE_PATH} does not exist"
 fi
