@@ -1,0 +1,7 @@
+steps:
+  - label: ":swift: Build & Run"
+    commands:
+      - "swift build"
+      - "swift run"
+    agents:
+      queue: hosted-macos-medium

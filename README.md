@@ -6,3 +6,5 @@ A repository to test caching of Swift dependencies
 
 - `swift package init --type executable`
 - `swift package resolve`
+- `swift build`
+- `swift run`
