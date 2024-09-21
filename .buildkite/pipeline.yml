@@ -1,5 +1,5 @@
 steps:
-  - label: ":swift: Resolve Dependencies (with cache)"
+  - label: ":swift: Copy to cache"
     key: "resolve-dependencies-with-cache"
     command: ".buildkite/steps/copy-to-cache.sh"
     agents:

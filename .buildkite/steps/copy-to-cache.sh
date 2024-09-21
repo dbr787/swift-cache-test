@@ -19,6 +19,11 @@ if [ -d "${NSC_CACHE_PATH}/build" ]; then
   # Check if .build was restored successfully
   if [ -d ./.build ] && [ "$(ls -A ./.build)" ]; then
     echo "Successfully restored .build directory from cache."
+    
+    # List the contents and sizes of the restored .build directory
+    echo "Listing directories in restored .build (max depth 3):"
+    find "./.build" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
+    
   else
     echo "Warning: Restored .build directory is empty."
   fi
@@ -39,7 +44,7 @@ echo "Caching the local ./.build directory to ${NSC_CACHE_PATH}/build..."
 sudo cp -a ./.build "${NSC_CACHE_PATH}/build"
 
 # Log the size of the cached .build directory
-echo "Size of cached .build directory:"
-du -sh "${NSC_CACHE_PATH}/build"
+echo "Listing directories in ${NSC_CACHE_PATH}:"
+find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
 
 echo "Cached the local ./.build directory to ${NSC_CACHE_PATH}/build."
