@@ -10,11 +10,6 @@ echo "NSC_CACHE_PATH is set to: ${NSC_CACHE_PATH}"
 echo "Listing directories in ${NSC_CACHE_PATH}:"
 find "${NSC_CACHE_PATH}" -maxdepth 3 -type d -exec du -sh {} + 2>/dev/null || true
 
-# TEMP: Clear the existing cache to resolve recursive .build issue
-echo -e '+++ \033[31m:swift: Clearing existing cache to resolve recursive .build issue\033[0m'
-rm -rf "${NSC_CACHE_PATH}/build"
-echo "Cleared cache at ${NSC_CACHE_PATH}/build."
-
 # Log group for restoring cached dependencies
 echo -e '+++ \033[35m:swift: Restoring cached dependencies\033[0m'
 if [ -d "${NSC_CACHE_PATH}/build" ]; then
@@ -43,7 +38,7 @@ fi
 
 # Log group for resolving dependencies
 echo -e '+++ \033[36m:swift: Resolving Swift package dependencies\033[0m'
-time swift package resolve
+swift package resolve
 echo "Swift package dependencies resolved."
 
 # Log group for caching resolved dependencies
