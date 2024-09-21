@@ -1,15 +1,25 @@
-env:
-  USE_CACHE: "true"
-  CLEAR_CACHE: "false"
-  CACHE_KEY: "package-cache-{{ build.branch }}"
-
 steps:
   - label: ":swift: Resolve Dependencies (with cache)"
     key: "resolve-dependencies-with-cache"
-    command: ".buildkite/steps/copy-to-cache.sh"
+    command: ".buildkite/steps/resolve-dependencies.sh"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "package-cache"
+    env:
+      USE_CACHE: "true"
+      CLEAR_CACHE: "false"
+      CACHE_KEY: "package-cache-${BUILDKITE_BRANCH}"
+
+  - label: ":swift: Resolve Dependencies (no cache)"
+    key: "resolve-dependencies-no-cache"
+    command: ".buildkite/steps/resolve-dependencies.sh"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "package-cache"
+    env:
+      USE_CACHE: "false"
+      CLEAR_CACHE: "false"
+      CACHE_KEY: "package-cache-${BUILDKITE_BRANCH}"
 
   # # Resolve Dependencies with Cache
   # - label: ":swift: Resolve Dependencies (with cache)"
