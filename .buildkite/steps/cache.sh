@@ -49,7 +49,7 @@ show_cache_metadata() {
   fi
 }
 
-# Function to list the contents of the cache directory with size, creation date, and modification date in a table format
+# Function to list the contents of the cache directory with size, creation date, and modification date, sorted by path
 list_cache() {
   if [ -d "${CACHE_DIR}" ]; then
     echo -e "\033[90mListing contents of CACHE_DIR (${CACHE_DIR}):"
@@ -68,8 +68,8 @@ list_cache() {
       printf "%-10s %-25s %-25s %-50s\n" "$size" "$created_date" "$modified_date" "$path" >> "$temp_file"
     done
 
-    # Display the sorted output in gray
-    cat "$temp_file" | sort -h
+    # Display the sorted output by path
+    cat "$temp_file" | sort -k4
     rm -f "$temp_file"
 
     # Reset the color back to default
