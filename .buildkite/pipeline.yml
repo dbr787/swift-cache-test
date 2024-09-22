@@ -49,7 +49,7 @@ steps:
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache"
-    depends_on: "spm-cache-resolve-again"
+    depends_on: "spm-cache-rebuild"
 
   # - label: ":swift: Resolve Dependencies (with cache)"
   #   key: "resolve-dependencies-with-cache"
