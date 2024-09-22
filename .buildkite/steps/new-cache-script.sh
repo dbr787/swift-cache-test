@@ -14,7 +14,7 @@ CACHE_METADATA="${CACHE_DIR}.metadata"
 
 # Function to update the cache metadata file
 update_cache_metadata() {
-  local action=$1  # Action can be 'created', 'used', 'cleared', or 'ignored'
+  local action=$1  # Action can be 'created', 'used', or 'cleared'
   local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
   local build_number="${BUILDKITE_BUILD_NUMBER:-unknown}"
   local step_key="${BUILDKITE_STEP_KEY:-unknown}"
@@ -39,13 +39,10 @@ update_cache_metadata() {
     cleared)
       jq --argjson last_cleared "$metadata_entry" '. + {last_cleared: $last_cleared}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
-    ignored)
-      jq --argjson last_ignored "$metadata_entry" '. + {last_ignored: $last_ignored}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
-      ;;
   esac
 }
 
-# Function to display the cache metadata (creation, last used, last cleared, last ignored)
+# Function to display the cache metadata (creation, last used, last cleared)
 show_cache_metadata() {
   if [ -f "$CACHE_METADATA" ]; then
     echo "Cache metadata:"
@@ -55,29 +52,27 @@ show_cache_metadata() {
   fi
 }
 
-# Function to list the contents of the cache directory with size, creation date, and modification date
+# Function to list the contents of the cache directory with size, creation date, and modification date in a table format
 list_cache() {
   if [ -d "${CACHE_DIR}" ]; then
     echo -e "\033[90mListing contents of CACHE_DIR (${CACHE_DIR}):"
-    printf "\033[90m%-6s %-21s %-21s %-50s\n" "Size" "Created Date" "Modified Date" "Path"
-    echo -e "\033[90m----------------------------------------------------------------------------------------------------"
+    printf "\033[90m%-10s %-25s %-25s %-50s\n" "Size" "Created Date" "Modified Date" "Path"
+    echo -e "\033[90m---------------------------------------------------------------------------------------------------------"
 
     # Collecting directory details into a temporary file for sorting
     temp_file=$(mktemp)
-    
+
     sudo find "${CACHE_DIR}" -maxdepth 2 -type d -exec du -sh {} + 2>/dev/null | while read -r size path; do
       # Using stat for macOS to get the creation and modification dates
       created_date=$(stat -f "%SB" -t "%Y-%m-%d %H:%M:%S" "$path") || echo "N/A"
       modified_date=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$path") || echo "N/A"
-      
-      # Print the size, creation date, modification date, and path
-      echo -e "$size $created_date $modified_date $path"
-    done | sort -h > "$temp_file"
+
+      # Print the size, creation date, modification date, and path into the temporary file
+      printf "%-10s %-25s %-25s %-50s\n" "$size" "$created_date" "$modified_date" "$path" >> "$temp_file"
+    done
 
     # Display the sorted output in gray
-    cat "$temp_file"
-
-    # Removing temporary file
+    cat "$temp_file" | sort -h
     rm -f "$temp_file"
 
     # Reset the color back to default
@@ -118,7 +113,11 @@ resolve_dependencies_with_cache() {
   fi
 
   echo "Resolving dependencies directly into cache directory: ${CACHE_DIR}"
-  swift package resolve --build-path "${CACHE_DIR}"
+
+  if ! swift package resolve --build-path "${CACHE_DIR}"; then
+    echo "Error: Failed to resolve Swift package dependencies."
+    exit 1
+  fi
 
   list_cache  # List cache contents after resolving dependencies
 }
@@ -129,9 +128,17 @@ resolve_dependencies_without_cache() {
   echo "Resolving dependencies directly into the default ./.build directory, ignoring the cache"
   
   # Ignore cache and resolve directly to the default directory
-  swift package resolve  # This resolves into the default ./.build directory, bypassing the cache
+  if ! swift package resolve; then
+    echo "Error: Failed to resolve Swift package dependencies."
+    exit 1
+  fi
+}
 
-  update_cache_metadata "ignored"  # Log that the cache was ignored without altering created/used fields
+# Function to rebuild the cache by clearing and recreating it
+rebuild_cache() {
+  echo -e '--- \033[33m:swift: Rebuilding cache (clearing and resolving dependencies)\033[0m'
+  clear_cache  # Clear the cache
+  resolve_dependencies_with_cache  # Recreate the cache
 }
 
 # Main Execution
@@ -145,8 +152,11 @@ case "${1:-resolve}" in
   ignore)
     resolve_dependencies_without_cache
     ;;
+  rebuild)
+    rebuild_cache
+    ;;
   *)
-    echo "Unknown command: ${1:-resolve}. Use 'clear', 'resolve', or 'ignore'."
+    echo "Unknown command: ${1:-resolve}. Use 'clear', 'resolve', 'ignore', or 'rebuild'."
     exit 1
     ;;
 esac
