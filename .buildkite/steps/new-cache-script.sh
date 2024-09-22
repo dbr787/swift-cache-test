@@ -22,7 +22,8 @@ list_cache() {
     temp_file=$(mktemp)
     
     sudo find "${CACHE_DIR}" -maxdepth 2 -type d -exec du -sh {} + 2>/dev/null | while read -r size path; do
-      modified_date=$(stat -c %y "$path" 2>/dev/null || echo "N/A")  # Full modification date including time
+      # Using ls to get the modification date and time
+      modified_date=$(ls -ld --time-style=long-iso "$path" | awk '{print $6, $7}') || echo "N/A"
       echo "$size $modified_date $path" >> "$temp_file"
     done
 
