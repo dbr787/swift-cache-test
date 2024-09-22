@@ -26,7 +26,7 @@ list_cache() {
 
 # Function to clear cache
 clear_cache() {
-  echo -e '+++ \033[31m:swift: Clearing cache\033[0m' # Red for clearing cache
+  echo -e '--- \033[31m:swift: Clearing cache\033[0m' # Red for clearing cache
   list_cache # List cache contents before clearing
   echo "Clearing cache in ${CACHE_DIR}"
   sudo rm -rf "${CACHE_DIR}"
@@ -37,10 +37,10 @@ clear_cache() {
 # Function to resolve dependencies using the cache (Green if cache exists, Cyan if cache is created)
 resolve_dependencies_with_cache() {
   if [ -d "${CACHE_DIR}" ]; then
-    echo -e '+++ \033[32m:swift: Resolving Swift package dependencies (using existing cache)\033[0m'  # Green for existing cache
+    echo -e '--- \033[32m:swift: Resolving Swift package dependencies (using existing cache)\033[0m'  # Green for existing cache
     list_cache # List cache contents before resolving dependencies
   else
-    echo -e '+++ \033[36m:swift: Resolving Swift package dependencies (creating cache)\033[0m'  # Cyan for cache creation
+    echo -e '--- \033[36m:swift: Resolving Swift package dependencies (creating cache)\033[0m'  # Cyan for cache creation
     mkdir -p "${CACHE_DIR}"
   fi
   echo "Resolving dependencies directly into cache directory: ${CACHE_DIR}"
@@ -51,7 +51,7 @@ resolve_dependencies_with_cache() {
 
 # Function to resolve dependencies without using the cache (Purple)
 resolve_dependencies_without_cache() {
-  echo -e '+++ \033[35m:swift: Resolving Swift package dependencies (ignoring cache)\033[0m' # Purple for ignoring cache
+  echo -e '--- \033[35m:swift: Resolving Swift package dependencies (ignoring cache)\033[0m' # Purple for ignoring cache
   echo "Resolving dependencies directly into the default ./.build directory, ignoring the cache"
   swift package resolve # This resolves into the default ./.build directory, bypassing the cache
   echo "Dependencies resolved without using the cache"
