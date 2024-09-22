@@ -75,7 +75,7 @@ list_cache() {
     # Reset the color back to default
     echo -e "\033[0m"
   else
-    echo "No cache directory exists at ${CACHE_DIR}."
+    echo "No cache directory exists at ${CACHE_DIR}"
   fi
 }
 
