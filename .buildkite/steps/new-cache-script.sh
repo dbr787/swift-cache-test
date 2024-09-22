@@ -91,8 +91,9 @@ list_cache() {
 
 # Function to clear the cache and log the clearing time
 clear_cache() {
-  echo -e '--- \033[31m:swift: Clearing cache\033[0m'
   if [ -d "${CACHE_DIR}" ]; then
+    echo -e '--- \033[31m:swift: Clearing cache\033[0m'
+    show_cache_metadata  # Show cache metadata before clearing
     list_cache  # List cache contents before clearing
     echo "Clearing cache in ${CACHE_DIR}"
     sudo rm -rf "${CACHE_DIR}"
@@ -108,14 +109,14 @@ clear_cache() {
 resolve_dependencies_with_cache() {
   if [ -d "${CACHE_DIR}" ]; then
     echo -e '--- \033[32m:swift: Resolving Swift package dependencies (using existing cache)\033[0m'
+    show_cache_metadata  # Show cache metadata before using the cache
     list_cache  # List cache contents before resolving dependencies
-    show_cache_metadata  # Show the current cache metadata
     update_cache_metadata "used"  # Update the last used time in the metadata
   else
     echo -e '--- \033[36m:swift: Resolving Swift package dependencies (creating cache)\033[0m'
     mkdir -p "${CACHE_DIR}"
     update_cache_metadata "created"  # Log the cache creation time
-    show_cache_metadata  # Show the new metadata
+    show_cache_metadata  # Show the new cache metadata after creation
   fi
 
   echo "Resolving dependencies directly into cache directory: ${CACHE_DIR}"
