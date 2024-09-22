@@ -25,24 +25,28 @@ update_cache_metadata() {
     echo "{}" > "$CACHE_METADATA"
   fi
 
-  # Create the JSON object for the event
-  local metadata_entry
-  metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_key "$step_key" \
+  # Ensure that the created event is always preserved in the metadata
+  local metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_key "$step_key" \
     '{timestamp: $timestamp, build_number: $build_number, step_key: $step_key}')
 
-  # Update metadata file based on the action (created, used, cleared, ignored)
   case $action in
     created)
       jq --argjson created "$metadata_entry" '. + {created: $created, last_used: $created, last_cleared: null}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     used)
+      # Ensure that "created" exists before updating "last_used"
+      if ! jq -e '.created' "$CACHE_METADATA" > /dev/null; then
+        echo "Error: Metadata missing 'created' information. Cache might not have been created properly."
+        exit 1
+      fi
       jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     cleared)
       jq --argjson last_cleared "$metadata_entry" '. + {last_cleared: $last_cleared}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     ignored)
-      jq --argjson ignored "$metadata_entry" '. + {last_ignored: $ignored}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      # Update only the "ignored" event without touching other fields
+      jq --argjson last_ignored "$metadata_entry" '. + {last_ignored: $last_ignored}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
   esac
 }
@@ -134,7 +138,7 @@ resolve_dependencies_without_cache() {
   # Ignore cache and resolve directly to the default directory
   swift package resolve  # This resolves into the default ./.build directory, bypassing the cache
 
-  update_cache_metadata "ignored"  # Log that the cache was ignored
+  update_cache_metadata "ignored"  # Log that the cache was ignored without altering created/used fields
 }
 
 # Main Execution
