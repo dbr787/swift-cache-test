@@ -11,14 +11,29 @@ fi
 # Define CACHE_DIR at the top of the script
 CACHE_DIR="${NSC_CACHE_PATH}/.build"
 
-# Function to list the contents of the cache directory with size, path, and modification date
+# Function to list the contents of the cache directory with size, date, and directory path (output in gray)
 list_cache() {
   if [ -d "${CACHE_DIR}" ]; then
-    echo "Listing contents of CACHE_DIR (${CACHE_DIR}):"
+    echo -e "\033[90mListing contents of CACHE_DIR (${CACHE_DIR}):"
+    printf "\033[90m%-10s %-25s %-50s\n" "Size" "Modified Date" "Path"
+    echo -e "\033[90m-------------------------------------------------------------------------------"
+
+    # Collecting directory details into a temporary file for sorting
+    temp_file=$(mktemp)
+    
     sudo find "${CACHE_DIR}" -maxdepth 2 -type d -exec du -sh {} + 2>/dev/null | while read -r size path; do
-      modified_date=$(ls -ld "$path" | awk '{print $6, $7, $8}')  # Modification date using ls -ld
-      printf "%-10s  %-50s  %s\n" "$size" "$path" "$modified_date"
+      modified_date=$(stat -c %y "$path" 2>/dev/null || echo "N/A")  # Full modification date including time
+      echo "$size $modified_date $path" >> "$temp_file"
     done
+
+    # Sorting by size first, then modification date, then path, and displaying in gray
+    sort -k1hr -k2,3 -k4 "$temp_file" | awk '{ printf "\033[90m%-10s %-25s %-50s\n", $1, $2" "$3, $4 }'
+
+    # Removing temporary file
+    rm -f "$temp_file"
+
+    # Reset the color back to default
+    echo -e "\033[0m"
   else
     echo "No cache directory exists at ${CACHE_DIR}."
   fi
