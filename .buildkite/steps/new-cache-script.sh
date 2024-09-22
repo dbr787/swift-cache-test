@@ -16,7 +16,7 @@ list_cache() {
   if [ -d "${CACHE_DIR}" ]; then
     echo "Listing contents of CACHE_DIR (${CACHE_DIR}):"
     sudo find "${CACHE_DIR}" -maxdepth 2 -type d -exec du -sh {} + 2>/dev/null | while read -r size path; do
-      modified_date=$(stat -c %y "$path" 2>/dev/null || echo "N/A")  # Modification date, "N/A" if not available
+      modified_date=$(ls -ld "$path" | awk '{print $6, $7, $8}')  # Modification date using ls -ld
       printf "%-10s  %-50s  %s\n" "$size" "$path" "$modified_date"
     done
   else
