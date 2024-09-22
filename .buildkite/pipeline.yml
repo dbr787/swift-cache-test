@@ -1,16 +1,16 @@
 steps:
-  - label: ":swift: Resolve cache"
-    key: "spm-cache-resolve"
-    commands:
-      - ".buildkite/steps/new-cache-script.sh resolve"
-    agents:
-      queue: hosted-macos-medium
-      nsc-cache-tag: "spm-cache"
-
   - label: ":swift: Ignore cache"
     key: "spm-cache-ignore"
     commands:
       - ".buildkite/steps/new-cache-script.sh ignore"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "spm-cache"
+
+  - label: ":swift: Resolve cache"
+    key: "spm-cache-resolve"
+    commands:
+      - ".buildkite/steps/new-cache-script.sh resolve"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache"
@@ -22,6 +22,7 @@ steps:
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache"
+    depends_on: "spm-cache-resolve"
 
   - label: ":swift: Resolve cache again"
     key: "spm-cache-resolve-again"
@@ -30,6 +31,8 @@ steps:
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache"
+    depends_on: "spm-cache-clear"
+
   - label: ":swift: Resolve cache again again"
     key: "spm-cache-resolve-again-again"
     commands:
@@ -37,6 +40,7 @@ steps:
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache"
+    depends_on: "spm-cache-resolve-again"
 
   # - label: ":swift: Resolve Dependencies (with cache)"
   #   key: "resolve-dependencies-with-cache"
