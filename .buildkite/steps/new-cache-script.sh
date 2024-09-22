@@ -12,7 +12,7 @@ fi
 CACHE_DIR="${NSC_CACHE_PATH}/.build"
 CACHE_METADATA="${CACHE_DIR}.metadata"
 
-# Function to initialize or update the metadata file with creation, usage, clearing, or ignoring details
+# Function to update the metadata file with creation, usage, clearing, or ignoring details
 update_cache_metadata() {
   local action=$1  # Action can be 'created', 'used', 'cleared', or 'ignored'
   local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
@@ -25,7 +25,7 @@ update_cache_metadata() {
     echo "{}" > "$CACHE_METADATA"
   fi
 
-  # Ensure that the created event is always preserved in the metadata
+  # Create the JSON object for the event
   local metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_key "$step_key" \
     '{timestamp: $timestamp, build_number: $build_number, step_key: $step_key}')
 
@@ -34,18 +34,12 @@ update_cache_metadata() {
       jq --argjson created "$metadata_entry" '. + {created: $created, last_used: $created, last_cleared: null}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     used)
-      # Ensure that "created" exists before updating "last_used"
-      if ! jq -e '.created' "$CACHE_METADATA" > /dev/null; then
-        echo "Error: Metadata missing 'created' information. Cache might not have been created properly."
-        exit 1
-      fi
       jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     cleared)
       jq --argjson last_cleared "$metadata_entry" '. + {last_cleared: $last_cleared}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     ignored)
-      # Update only the "ignored" event without touching other fields
       jq --argjson last_ignored "$metadata_entry" '. + {last_ignored: $last_ignored}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
   esac
@@ -126,7 +120,6 @@ resolve_dependencies_with_cache() {
   echo "Resolving dependencies directly into cache directory: ${CACHE_DIR}"
   swift package resolve --build-path "${CACHE_DIR}"
 
-  echo "Dependencies resolved and stored in ${CACHE_DIR}"
   list_cache  # List cache contents after resolving dependencies
 }
 
