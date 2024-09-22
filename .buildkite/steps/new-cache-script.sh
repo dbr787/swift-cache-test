@@ -11,24 +11,25 @@ fi
 # Define CACHE_DIR at the top of the script
 CACHE_DIR="${NSC_CACHE_PATH}/.build"
 
-# Function to list the contents of the cache directory with size, date, and directory path (output in gray)
+# Function to list the contents of the cache directory with size, creation date, modification date, and directory path (output in gray)
 list_cache() {
   if [ -d "${CACHE_DIR}" ]; then
     echo -e "\033[90mListing contents of CACHE_DIR (${CACHE_DIR}):"
-    printf "\033[90m%-10s %-25s %-50s\n" "Size" "Modified Date" "Path"
-    echo -e "\033[90m-------------------------------------------------------------------------------"
+    printf "\033[90m%-6s %-20s %-20s %-50s\n" "Size" "Created Date" "Modified Date" "Path"
+    echo -e "\033[90m----------------------------------------------------------------------------------------------------"
 
     # Collecting directory details into a temporary file for sorting
     temp_file=$(mktemp)
     
     sudo find "${CACHE_DIR}" -maxdepth 2 -type d -exec du -sh {} + 2>/dev/null | while read -r size path; do
-      # Using stat for macOS to get the modification date
+      # Using stat for macOS to get the creation and modification dates
+      created_date=$(stat -f "%SB" -t "%Y-%m-%d %H:%M:%S" "$path") || echo "N/A"
       modified_date=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$path") || echo "N/A"
-      echo "$size $modified_date $path" >> "$temp_file"
+      echo "$size $created_date $modified_date $path" >> "$temp_file"
     done
 
-    # Sorting by size first, then modification date, then path, and displaying in gray
-    sort -k1hr -k2,3 -k4 "$temp_file" | awk '{ printf "\033[90m%-10s %-25s %-50s\n", $1, $2" "$3, $4 }'
+    # Sorting by size first, then creation date, then modification date, then path, and displaying in gray
+    sort -k1hr -k2,3 -k4,5 -k6 "$temp_file" | awk '{ printf "\033[90m%-6s %-20s %-20s %-50s\n", $1, $2" "$3, $4" "$5, $6 }'
 
     # Removing temporary file
     rm -f "$temp_file"
