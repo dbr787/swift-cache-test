@@ -1,28 +1,49 @@
 steps:
   - label: ":swift: Resolve cache"
-    key: "new-cache-script"
+    key: "spm-cache-resolve"
     commands:
       - ".buildkite/steps/new-cache-script.sh resolve"
-      # - ".buildkite/steps/new-cache-script.sh ignore"
-      # - ".buildkite/steps/new-cache-script.sh clear"
     agents:
       queue: hosted-macos-medium
-      nsc-cache-tag: "spm-cache" # Is this the cache key?
+      nsc-cache-tag: "spm-cache"
+
   - label: ":swift: Ignore cache"
     key: "spm-cache-ignore"
     commands:
       - ".buildkite/steps/new-cache-script.sh ignore"
     agents:
       queue: hosted-macos-medium
-      nsc-cache-tag: "spm-cache" # Is this the cache key?
+      nsc-cache-tag: "spm-cache"
 
+  - label: ":swift: Clear cache"
+    key: "spm-cache-clear"
+    commands:
+      - ".buildkite/steps/new-cache-script.sh clear"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "spm-cache"
+
+  - label: ":swift: Resolve cache again"
+    key: "spm-cache-resolve-again"
+    commands:
+      - ".buildkite/steps/new-cache-script.sh resolve"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "spm-cache"
+  - label: ":swift: Resolve cache again again"
+    key: "spm-cache-resolve-again-again"
+    commands:
+      - ".buildkite/steps/new-cache-script.sh resolve"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "spm-cache"
 
   # - label: ":swift: Resolve Dependencies (with cache)"
   #   key: "resolve-dependencies-with-cache"
   #   command: ".buildkite/steps/resolve-dependencies.sh"
   #   agents:
   #     queue: hosted-macos-medium
-  #     nsc-cache-tag: "package-cache" # Is this the cache key?
+  #     nsc-cache-tag: "package-cache"
   #   env:
   #     USE_CACHE: "true"
   #     CACHE_KEY: "${BUILDKITE_BRANCH}" # Placeholder only (for now)
@@ -32,7 +53,7 @@ steps:
   #   command: ".buildkite/steps/resolve-dependencies.sh"
   #   agents:
   #     queue: hosted-macos-medium
-  #     nsc-cache-tag: "package-cache" # Is this the cache key?
+  #     nsc-cache-tag: "package-cache"
   #   env:
   #     USE_CACHE: "false"
   #     CACHE_KEY: "${BUILDKITE_BRANCH}" # Placeholder only (for now)
