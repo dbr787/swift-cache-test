@@ -8,10 +8,56 @@ if [ -z "${NSC_CACHE_PATH:-}" ] || [ ! -d "${NSC_CACHE_PATH}" ]; then
   exit 1
 fi
 
-# Define CACHE_DIR at the top of the script
+# Define CACHE_DIR and CACHE_METADATA (stored at the same level as CACHE_DIR)
 CACHE_DIR="${NSC_CACHE_PATH}/.build"
+CACHE_METADATA="${CACHE_DIR}.metadata"
 
-# Function to list the contents of the cache directory with size, creation date, modification date, and directory path (output in gray, bold modified date if different)
+# Function to initialize or update the metadata file with creation, usage, clearing, or ignoring details
+update_cache_metadata() {
+  local action=$1  # Action can be 'created', 'used', 'cleared', or 'ignored'
+  local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
+  local build_number="${BUILDKITE_BUILD_NUMBER:-unknown}"
+  local step_key="${BUILDKITE_STEP_KEY:-unknown}"
+
+  # If metadata file doesn't exist, initialize it
+  if [ ! -f "$CACHE_METADATA" ]; then
+    echo "Initializing cache metadata."
+    echo "{}" > "$CACHE_METADATA"
+  fi
+
+  # Create the JSON object for the event
+  local metadata_entry
+  metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_key "$step_key" \
+    '{timestamp: $timestamp, build_number: $build_number, step_key: $step_key}')
+
+  # Update metadata file based on the action (created, used, cleared, ignored)
+  case $action in
+    created)
+      jq --argjson created "$metadata_entry" '. + {created: $created, last_used: $created, last_cleared: null}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      ;;
+    used)
+      jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      ;;
+    cleared)
+      jq --argjson last_cleared "$metadata_entry" '. + {last_cleared: $last_cleared}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      ;;
+    ignored)
+      jq --argjson ignored "$metadata_entry" '. + {last_ignored: $ignored}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      ;;
+  esac
+}
+
+# Function to display the cache metadata (creation, last used, last cleared, last ignored)
+show_cache_metadata() {
+  if [ -f "$CACHE_METADATA" ]; then
+    echo "Cache metadata:"
+    jq '.' "$CACHE_METADATA"
+  else
+    echo "No cache metadata found. The cache might be new or never used."
+  fi
+}
+
+# Function to list the contents of the cache directory with size, creation date, and modification date
 list_cache() {
   if [ -d "${CACHE_DIR}" ]; then
     echo -e "\033[90mListing contents of CACHE_DIR (${CACHE_DIR}):"
@@ -26,16 +72,12 @@ list_cache() {
       created_date=$(stat -f "%SB" -t "%Y-%m-%d %H:%M:%S" "$path") || echo "N/A"
       modified_date=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$path") || echo "N/A"
       
-      # Check if modified date is different from created date and make it bold if different
-      if [ "$created_date" != "$modified_date" ]; then
-        modified_date="\033[1m$modified_date\033[0m"  # Bold the modified date if it's different
-      fi
+      # Print the size, creation date, modification date, and path
+      echo -e "$size $created_date $modified_date $path"
+    done | sort -h > "$temp_file"
 
-      echo "$size $created_date $modified_date $path" >> "$temp_file"
-    done
-
-    # Sorting by size first, then creation date, then modification date, then path, and displaying in gray
-    sort -k1hr -k2,3 -k4,5 -k6 "$temp_file" | awk '{ printf "\033[90m%-6s %-21s %-21s %-50s\n", $1, $2" "$3, $4" "$5, $6 }'
+    # Display the sorted output in gray
+    cat "$temp_file"
 
     # Removing temporary file
     rm -f "$temp_file"
@@ -47,37 +89,51 @@ list_cache() {
   fi
 }
 
-# Function to clear cache
+# Function to clear the cache and log the clearing time
 clear_cache() {
-  echo -e '--- \033[31m:swift: Clearing cache\033[0m'  # Red for clearing cache
-  list_cache  # List cache contents before clearing
-  echo "Clearing cache in ${CACHE_DIR}"
-  sudo rm -rf "${CACHE_DIR}"
-  echo "Cache cleared"
-  list_cache  # List cache contents after clearing
+  echo -e '--- \033[31m:swift: Clearing cache\033[0m'
+  if [ -d "${CACHE_DIR}" ]; then
+    list_cache  # List cache contents before clearing
+    echo "Clearing cache in ${CACHE_DIR}"
+    sudo rm -rf "${CACHE_DIR}"
+    echo "Cache cleared."
+    update_cache_metadata "cleared"  # Log the cache clearing time
+    list_cache  # List cache contents after clearing
+  else
+    echo "No cache directory exists, nothing to clear."
+  fi
 }
 
-# Function to resolve dependencies using the cache (Green if cache exists, Cyan if cache is created)
+# Function to resolve dependencies using the cache, updating metadata if necessary
 resolve_dependencies_with_cache() {
   if [ -d "${CACHE_DIR}" ]; then
-    echo -e '--- \033[32m:swift: Resolving Swift package dependencies (using existing cache)\033[0m'  # Green for existing cache
+    echo -e '--- \033[32m:swift: Resolving Swift package dependencies (using existing cache)\033[0m'
     list_cache  # List cache contents before resolving dependencies
+    show_cache_metadata  # Show the current cache metadata
+    update_cache_metadata "used"  # Update the last used time in the metadata
   else
-    echo -e '--- \033[36m:swift: Resolving Swift package dependencies (creating cache)\033[0m'  # Cyan for cache creation
+    echo -e '--- \033[36m:swift: Resolving Swift package dependencies (creating cache)\033[0m'
     mkdir -p "${CACHE_DIR}"
+    update_cache_metadata "created"  # Log the cache creation time
+    show_cache_metadata  # Show the new metadata
   fi
+
   echo "Resolving dependencies directly into cache directory: ${CACHE_DIR}"
   swift package resolve --build-path "${CACHE_DIR}"
+
   echo "Dependencies resolved and stored in ${CACHE_DIR}"
   list_cache  # List cache contents after resolving dependencies
 }
 
-# Function to resolve dependencies without using the cache (Purple)
+# Function to resolve dependencies without using the cache (ignoring cache)
 resolve_dependencies_without_cache() {
-  echo -e '--- \033[35m:swift: Resolving Swift package dependencies (ignoring cache)\033[0m'  # Purple for ignoring cache
+  echo -e '--- \033[35m:swift: Resolving Swift package dependencies (ignoring cache)\033[0m'
   echo "Resolving dependencies directly into the default ./.build directory, ignoring the cache"
+  
+  # Ignore cache and resolve directly to the default directory
   swift package resolve  # This resolves into the default ./.build directory, bypassing the cache
-  echo "Dependencies resolved without using the cache"
+
+  update_cache_metadata "ignored"  # Log that the cache was ignored
 }
 
 # Main Execution
