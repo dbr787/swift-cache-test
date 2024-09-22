@@ -9,26 +9,26 @@ steps:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache" # Is this the cache key?
 
-  - label: ":swift: Resolve Dependencies (with cache)"
-    key: "resolve-dependencies-with-cache"
-    command: ".buildkite/steps/resolve-dependencies.sh"
-    agents:
-      queue: hosted-macos-medium
-      nsc-cache-tag: "package-cache" # Is this the cache key?
-    env:
-      USE_CACHE: "true"
-      CACHE_KEY: "${BUILDKITE_BRANCH}" # Placeholder only (for now)
 
-  - label: ":swift: Resolve Dependencies (no cache)"
-    key: "resolve-dependencies-no-cache"
-    command: ".buildkite/steps/resolve-dependencies.sh"
-    agents:
-      queue: hosted-macos-medium
-      nsc-cache-tag: "package-cache" # Is this the cache key?
-    env:
-      USE_CACHE: "false"
-      CACHE_KEY: "${BUILDKITE_BRANCH}" # Placeholder only (for now)
+  # - label: ":swift: Resolve Dependencies (with cache)"
+  #   key: "resolve-dependencies-with-cache"
+  #   command: ".buildkite/steps/resolve-dependencies.sh"
+  #   agents:
+  #     queue: hosted-macos-medium
+  #     nsc-cache-tag: "package-cache" # Is this the cache key?
+  #   env:
+  #     USE_CACHE: "true"
+  #     CACHE_KEY: "${BUILDKITE_BRANCH}" # Placeholder only (for now)
 
+  # - label: ":swift: Resolve Dependencies (no cache)"
+  #   key: "resolve-dependencies-no-cache"
+  #   command: ".buildkite/steps/resolve-dependencies.sh"
+  #   agents:
+  #     queue: hosted-macos-medium
+  #     nsc-cache-tag: "package-cache" # Is this the cache key?
+  #   env:
+  #     USE_CACHE: "false"
+  #     CACHE_KEY: "${BUILDKITE_BRANCH}" # Placeholder only (for now)
 
   # # Resolve Dependencies with Cache
   # - label: ":swift: Resolve Dependencies (with cache)"
