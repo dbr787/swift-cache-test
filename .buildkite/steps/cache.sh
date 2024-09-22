@@ -31,7 +31,7 @@ update_cache_metadata() {
 
   case $action in
     created)
-      jq --argjson created "$metadata_entry" '. + {created: $created, last_used: $created}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      jq --argjson created "$metadata_entry" '. + {created: $created}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     used)
       jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
