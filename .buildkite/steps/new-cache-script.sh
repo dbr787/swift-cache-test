@@ -12,7 +12,7 @@ fi
 CACHE_DIR="${NSC_CACHE_PATH}/.build"
 CACHE_METADATA="${CACHE_DIR}.metadata"
 
-# Function to update the metadata file with creation, usage, clearing, or ignoring details
+# Function to update the cache metadata file
 update_cache_metadata() {
   local action=$1  # Action can be 'created', 'used', 'cleared', or 'ignored'
   local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
@@ -89,8 +89,8 @@ list_cache() {
 
 # Function to clear the cache and log the clearing time
 clear_cache() {
+  echo -e '--- \033[31m:swift: Clearing cache\033[0m'
   if [ -d "${CACHE_DIR}" ]; then
-    echo -e '--- \033[31m:swift: Clearing cache\033[0m'
     show_cache_metadata  # Show cache metadata before clearing
     list_cache  # List cache contents before clearing
     echo "Clearing cache in ${CACHE_DIR}"
