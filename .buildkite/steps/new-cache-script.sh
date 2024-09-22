@@ -14,7 +14,7 @@ CACHE_METADATA="${CACHE_DIR}.metadata"
 
 # Function to update the cache metadata file
 update_cache_metadata() {
-  local action=$1  # Action can be 'created', 'used', or 'cleared'
+  local action=$1  # Action can be 'created' or 'used'
   local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
   local build_number="${BUILDKITE_BUILD_NUMBER:-unknown}"
   local step_key="${BUILDKITE_STEP_KEY:-unknown}"
@@ -31,18 +31,15 @@ update_cache_metadata() {
 
   case $action in
     created)
-      jq --argjson created "$metadata_entry" '. + {created: $created, last_used: $created, last_cleared: null}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      jq --argjson created "$metadata_entry" '. + {created: $created, last_used: $created}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
     used)
       jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
       ;;
-    cleared)
-      jq --argjson last_cleared "$metadata_entry" '. + {last_cleared: $last_cleared}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
-      ;;
   esac
 }
 
-# Function to display the cache metadata (creation, last used, last cleared)
+# Function to display the cache metadata (creation, last used)
 show_cache_metadata() {
   if [ -f "$CACHE_METADATA" ]; then
     echo "Cache metadata:"
@@ -82,7 +79,7 @@ list_cache() {
   fi
 }
 
-# Function to clear the cache and log the clearing time
+# Function to clear the cache and delete the metadata file
 clear_cache() {
   echo -e '--- \033[31m:swift: Clearing cache\033[0m'
   if [ -d "${CACHE_DIR}" ]; then
@@ -90,8 +87,14 @@ clear_cache() {
     list_cache  # List cache contents before clearing
     echo "Clearing cache in ${CACHE_DIR}"
     sudo rm -rf "${CACHE_DIR}"
-    echo "Cache cleared."
-    update_cache_metadata "cleared"  # Log the cache clearing time
+
+    # Delete the metadata file
+    if [ -f "$CACHE_METADATA" ]; then
+      echo "Deleting cache metadata file."
+      sudo rm -f "$CACHE_METADATA"
+    fi
+
+    echo "Cache and metadata cleared."
     list_cache  # List cache contents after clearing
   else
     echo "No cache directory exists, nothing to clear."
@@ -137,7 +140,7 @@ resolve_dependencies_without_cache() {
 # Function to rebuild the cache by clearing and recreating it
 rebuild_cache() {
   echo -e '--- \033[33m:swift: Rebuilding cache (clearing and resolving dependencies)\033[0m'
-  clear_cache  # Clear the cache
+  clear_cache  # Clear the cache and delete metadata
   resolve_dependencies_with_cache  # Recreate the cache
 }
 
