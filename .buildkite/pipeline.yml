@@ -1,10 +1,17 @@
 steps:
-  - label: ":swift: New cache script"
+  - label: ":swift: Resolve cache"
     key: "new-cache-script"
     commands:
       - ".buildkite/steps/new-cache-script.sh resolve"
       # - ".buildkite/steps/new-cache-script.sh ignore"
       # - ".buildkite/steps/new-cache-script.sh clear"
+    agents:
+      queue: hosted-macos-medium
+      nsc-cache-tag: "spm-cache" # Is this the cache key?
+  - label: ":swift: Ignore cache"
+    key: "spm-cache-ignore"
+    commands:
+      - ".buildkite/steps/new-cache-script.sh ignore"
     agents:
       queue: hosted-macos-medium
       nsc-cache-tag: "spm-cache" # Is this the cache key?
