@@ -32,7 +32,7 @@ start_timer() {
 get_duration() {
   local end_time=$(date +%s)
   local duration=$((end_time - START_TIME))
-  echo "$duration seconds"
+  echo "$duration"
 }
 
 # Function to update the cache metadata file and annotate with details
@@ -61,19 +61,23 @@ update_cache_metadata_and_annotate() {
   echo "Cache after operation:"
   list_cache  # Listing cache contents after the operation
 
-  # Create the JSON object for the event
-  local metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_label "$step_label" --arg duration "$duration" \
-    '{timestamp: $timestamp, build_number: $build_number, step_label: $step_label, duration: $duration}')
+  # If the cache is created, store the source information
+  if [ "$action" = "created" ]; then
+    jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_label "$step_label" \
+      '{created: {timestamp: $timestamp, build_number: $build_number, step_label: $step_label}}' > "$CACHE_METADATA"
+  fi
 
-  # Update metadata based on the action
-  case $action in
-    created|used|cleared|ignored|rebuilt)
-      jq --argjson "$action" "$metadata_entry" ". + {$action: $action}" "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
-      ;;
-  esac
+  # Get the cache creation info from metadata (for annotations when cache is used)
+  local cache_source_info
+  if [ -f "$CACHE_METADATA" ]; then
+    cache_source_info=$(jq -r '.created | "\(.step_label) (Build #\(.build_number) at \(.timestamp))"' "$CACHE_METADATA")
+  else
+    cache_source_info="Unknown source"
+  fi
 
-  # Annotate with cache stats and duration
-  buildkite-agent annotate --style "success" --context "$step_id" "**$step_label** - Cache $action\nDuration: $duration\nBefore: ${before_size} (${before_file_count} files)\nAfter: ${after_size} (${after_file_count} files)"
+  # Annotate with cache stats, duration, and cache source info
+  buildkite-agent annotate --style "success" --context "$step_id" \
+    "**$step_label** - Cache $action<br>Duration: ${duration} seconds<br>Before: ${before_size} (${before_file_count} files)<br>After: ${after_size} (${after_file_count} files)<br>Source: $cache_source_info"
 }
 
 # Function to display the cache metadata (creation, last used)
