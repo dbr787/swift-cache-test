@@ -18,6 +18,7 @@ update_cache_metadata() {
   local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
   local build_number="${BUILDKITE_BUILD_NUMBER:-unknown}"
   local step_key="${BUILDKITE_STEP_KEY:-unknown}"
+  local step_id="${BUILDKITE_STEP_ID:-unknown}"
 
   # If metadata file doesn't exist, initialize it
   if [ ! -f "$CACHE_METADATA" ]; then
@@ -32,9 +33,11 @@ update_cache_metadata() {
   case $action in
     created)
       jq --argjson created "$metadata_entry" '. + {created: $created}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      buildkite-agent annotate --style "success" --context "$step_id" "Cache created on $timestamp (Build #$build_number, Step: $step_key)"
       ;;
     used)
       jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
+      buildkite-agent annotate --style "success" --context "$step_id" "Cache used on $timestamp (Build #$build_number, Step: $step_key)"
       ;;
   esac
 }

@@ -4,6 +4,7 @@ A repository to test caching of Swift dependencies
 
 ## TODO
 
+- use env var or something for rebuild, resolve, ignore, clear
 - add branch and commit to cache metadata and size? # of files?
 - Update script to use a .build directory inside the cache volume
 - Put cached vs not cached into step groups
