@@ -12,12 +12,23 @@ fi
 CACHE_DIR="${NSC_CACHE_PATH}/.build"
 CACHE_METADATA="${CACHE_DIR}.metadata"
 
+# Function to calculate cache size and file count
+calculate_cache_stats() {
+  if [ -d "${CACHE_DIR}" ]; then
+    local size=$(du -sh "${CACHE_DIR}" | cut -f1)
+    local file_count=$(find "${CACHE_DIR}" -type f | wc -l)
+    echo "$size" "$file_count"
+  else
+    echo "0" "0"
+  fi
+}
+
 # Function to update the cache metadata file
 update_cache_metadata() {
   local action=$1  # Action can be 'created' or 'used'
   local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
   local build_number="${BUILDKITE_BUILD_NUMBER:-unknown}"
-  local step_key="${BUILDKITE_STEP_KEY:-unknown}"
+  local step_label="${BUILDKITE_LABEL:-unknown}"
   local step_id="${BUILDKITE_STEP_ID:-unknown}"
 
   # If metadata file doesn't exist, initialize it
@@ -26,20 +37,29 @@ update_cache_metadata() {
     echo "{}" > "$CACHE_METADATA"
   fi
 
+  # Get cache size and file count before the action
+  local before_size before_file_count
+  read -r before_size before_file_count <<< "$(calculate_cache_stats)"
+
   # Create the JSON object for the event
-  local metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_key "$step_key" \
-    '{timestamp: $timestamp, build_number: $build_number, step_key: $step_key}')
+  local metadata_entry=$(jq -n --arg timestamp "$timestamp" --arg build_number "$build_number" --arg step_label "$step_label" --arg step_id "$step_id" \
+    '{timestamp: $timestamp, build_number: $build_number, step_label: $step_label, step_id: $step_id}')
 
   case $action in
     created)
       jq --argjson created "$metadata_entry" '. + {created: $created}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
-      buildkite-agent annotate --style "success" --context "$step_id" "Cache created on $timestamp (Build #$build_number, Step: $step_key)"
       ;;
     used)
       jq --argjson last_used "$metadata_entry" '. + {last_used: $last_used}' "$CACHE_METADATA" > "${CACHE_METADATA}.tmp" && mv "${CACHE_METADATA}.tmp" "$CACHE_METADATA"
-      buildkite-agent annotate --style "success" --context "$step_id" "Cache used on $timestamp (Build #$build_number, Step: $step_key)"
       ;;
   esac
+
+  # Get cache size and file count after the action
+  local after_size after_file_count
+  read -r after_size after_file_count <<< "$(calculate_cache_stats)"
+
+  # Annotate with cache stats (using only the label for now)
+  buildkite-agent annotate --style "success" --context "$step_id" "**$step_label** - Cache $action on $timestamp\nBefore: ${before_size} (${before_file_count} files)\nAfter: ${after_size} (${after_file_count} files)"
 }
 
 # Function to display the cache metadata (creation, last used)
